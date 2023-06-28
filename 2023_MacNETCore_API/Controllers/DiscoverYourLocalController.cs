@@ -59,15 +59,17 @@ public class DiscoverYourLocalController : ControllerBase
             password = headers["password"].ToString();
         }
 
-        var user = new JwtUserLogin()
+        var user = new JwtClients()
         {
-            Username = userName,
-            Password = password
-        }; //Authenticate(userLogin);
+            username = userName,
+            password = password
+        };
 
-        if (user != null)
+        var _user = _readRepository.AuthenticateJwtClient(user);
+
+        if (_user != null)
         {
-            var token = _jwtAuthenticator.GenerateToken(user);
+            var token = _jwtAuthenticator.GenerateToken(_user);
             return Ok(token);
         }
 

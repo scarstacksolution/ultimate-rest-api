@@ -5,7 +5,7 @@ namespace _2023_MacNETCore_API.Interfaces
 {
 	public interface IJwtAuthenticator
 	{
-        string GenerateToken(JwtUserLogin user);
+        string GenerateToken(JwtClients user);
     }
 }
 

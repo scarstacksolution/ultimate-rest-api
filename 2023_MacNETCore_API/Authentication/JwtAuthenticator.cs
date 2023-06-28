@@ -18,7 +18,7 @@ namespace _2023_MacNETCore_API.Authentication
 		}
 
 
-        public string GenerateToken(JwtUserLogin user)
+        public string GenerateToken(JwtClients user)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);

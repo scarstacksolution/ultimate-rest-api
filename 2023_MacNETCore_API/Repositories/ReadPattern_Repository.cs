@@ -5,17 +5,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace _2023_MacNETCore_API.Repositories
 {
-	public class ReadPattern_Repository : IReadPattern_Repository
+    public class ReadPattern_Repository : IReadPattern_Repository
     {
         // Field Properties
         private readonly ApplicationDBContext _context;
 
 
         // Constuctor
-		public ReadPattern_Repository(ApplicationDBContext context)
-		{
+        public ReadPattern_Repository(ApplicationDBContext context)
+        {
             _context = context;
-		}
+        }
 
         // Methods
 
@@ -52,7 +52,7 @@ namespace _2023_MacNETCore_API.Repositories
 
 
             // STYLE 2
-            /*Managers manager = _context.Managers.First(m => m.Manager_id == id);
+            /*Managers manager = _context.Managers.First(m => m.Manager_id == id && m.Manager_lname == "");
             return manager;*/
 
 
@@ -123,6 +123,7 @@ namespace _2023_MacNETCore_API.Repositories
             return _departments;
         }
 
+
         /// <summary>
         /// Checks if an employee exists in NewEmployee Table
         /// </summary>
@@ -136,6 +137,18 @@ namespace _2023_MacNETCore_API.Repositories
                 return true;
             }
             return false;
+        }
+
+
+        /// <summary>
+        /// returns a Jwt User from Database
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public JwtClients AuthenticateJwtClient(JwtClients user)
+        {
+            var _user = _context.JwtClients.First(j => j.username == user.username && j.password == user.password);
+            return _user!;
         }
 
 

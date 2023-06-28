@@ -10,6 +10,7 @@ namespace _2023_MacNETCore_API.Interfaces
         IEnumerable<Jobs> GetAllJobs();
         IEnumerable<Departments> GetAllDepartments();
         bool employeeExist(NewEmployees employee);
+        JwtClients AuthenticateJwtClient(JwtClients user);
     }
 }
 
