@@ -1,0 +1,88 @@
+﻿* HttpResponseException:
+
+            if (manager == null)
+            {
+                // Style A
+                _logger.LogInformation("No information found for {Managers}", DateTime.UtcNow.Date);
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+
+                // Style B
+                //var notFoundResponse = new HttpResponseMessage(HttpStatusCode.NotFound);
+                //throw new HttpResponseException(notFoundResponse.StatusCode);
+
+                //Style C
+                /*var resp = new HttpResponseMessage(HttpStatusCode.NotFound)
+                {
+                    Content = new StringContent(string.Format("No Manager with ID = {0}", id)),
+                    ReasonPhrase = "Manager ID Not Found"
+                };
+                throw new HttpResponseException(resp.StatusCode);*/
+            }
+
+
+* Add XML Formatting as Accept Header In Client Call to API:
+
+//var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers()
+    .AddXmlSerializerFormatters();
+
+
+
+* Context.SaveChanges();
+
+- https://learn.microsoft.com/en-us/aspnet/core/data/ef-mvc/crud?view=aspnetcore-7.0
+- https://learn.microsoft.com/en-us/aspnet/mvc/overview/getting-started/getting-started-with-ef-using-mvc/updating-related-data-with-the-entity-framework-in-an-asp-net-mvc-application
+
+
+===========================================================================================================================================================================
+
+
+==> JWT Implementation: https://www.c-sharpcorner.com/article/jwt-token-creation-authentication-and-authorization-in-asp-net-core-6-0-with-po/
+
+* appsettings.json:
+
+(A)
+ "Jwt": {
+    "Key": "AMDz2R78kP5jkoTK6FX5g789LRyn52”",
+    "Issuer": "https://localhost:7116",
+    "“Audience”": "https://localhost:7116"
+  },
+
+
+* Program.cs file:
+
+(B)
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => {
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+    };
+});
+
+
+(B)
+app.UseAuthentication();
+app.UseAuthorization();
+
+
+* Nugget Package:
+- JWT
+- Microsoft.AspNetCore.Authentication.JwtBearer
+- Microsoft.IdentityModel.Tokens
+- System.IdentityModel.Tokens.Jwt
+
+
+* Assembly Components for Program.cs Class :
+- using Microsoft.AspNetCore.Authentication.JwtBearer;
+- using Microsoft.IdentityModel.Tokens;
+- using System.Text;
+
+
+===========================================================================================================================================================================
