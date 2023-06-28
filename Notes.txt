@@ -46,7 +46,7 @@ builder.Services.AddControllers()
  "Jwt": {
     "Key": "AMDz2R78kP5jkoTK6FX5g789LRyn52”",
     "Issuer": "https://localhost:7116",
-    "“Audience”": "https://localhost:7116"
+    "Audience": "https://localhost:7116"
   },
 
 
@@ -86,3 +86,22 @@ app.UseAuthorization();
 
 
 ===========================================================================================================================================================================
+
+
+*	GitHub Desktop https://desktop.github.com
+
+
+===========================================================================================================================================================================
+
+
+*   Server-side Caching:
+
+https://learn.microsoft.com/en-us/aspnet/core/performance/caching/overview?view=aspnetcore-7.0
+
+https://code-maze.com/aspnetcore-in-memory-caching/
+
+
+
+// Program.cs:
+
+builder.Services.AddMemoryCache();

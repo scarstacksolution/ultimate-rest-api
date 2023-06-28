@@ -17,6 +17,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddMemoryCache();
+
 
 // Add DI IoC services to the container.
 builder.Services.AddScoped<IReadPattern_Repository, ReadPattern_Repository>();
