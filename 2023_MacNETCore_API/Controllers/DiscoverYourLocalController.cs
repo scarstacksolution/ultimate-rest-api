@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Sane.Http.HttpResponseExceptions;
@@ -22,16 +23,21 @@ public class DiscoverYourLocalController : ControllerBase
     private readonly IReadPattern_Repository _readRepository;
     private readonly IWritePattern_Repository _writeRepository;
     private readonly IJwtAuthenticator _jwtAuthenticator;
+    private IMemoryCache _memoryCache;
+    private const string managerListCacheKey = "managerList";
+
+
 
     // Constructor
     public DiscoverYourLocalController(ILogger<DiscoverYourLocalController> logger, IReadPattern_Repository readRepository,
-        IWritePattern_Repository writeRepository, IJwtAuthenticator jwtAuthenticator)
+        IWritePattern_Repository writeRepository, IJwtAuthenticator jwtAuthenticator, IMemoryCache memoryCache)
     {
         _logger = logger;
         _readRepository = readRepository;
         _writeRepository = writeRepository;
-       _jwtAuthenticator = jwtAuthenticator;
-}
+        _jwtAuthenticator = jwtAuthenticator;
+        _memoryCache = memoryCache;
+    }
 
 
     /// <summary>
@@ -97,24 +103,46 @@ public class DiscoverYourLocalController : ControllerBase
 
         try
         {
-            _logger.LogInformation("Processing request for GetAllManagers uri", DateTime.UtcNow.Date);
+            _logger.LogInformation("Processing request for GetAllManagers at: {DT}", DateTime.Now.ToLongTimeString());
 
-            var managers = _readRepository.GetAllManagers();
 
-            if (managers.Count() == 0)
+            if(_memoryCache.TryGetValue(managerListCacheKey, out IEnumerable<Managers> managers))
             {
-                _logger.LogWarning("No information found for GetAllManagers uri", DateTime.UtcNow.Date);
-                return (IEnumerable<Managers>)NotFound();
+                _logger.LogInformation("GetAllManagers found in cache at: {DT}", DateTime.Now.ToLongTimeString());
             }
 
-            _logger.LogInformation("Returning results found for GetAllManagers uri", DateTime.UtcNow.Date);
+            else
+            {
 
-            return managers;
+                _logger.LogInformation("GetAllManagers not found in cache at: {DT}", DateTime.Now.ToLongTimeString());
+
+                // Key not in cache, so get data
+                managers = _readRepository.GetAllManagers();
+                if (managers!.Count() == 0)
+                {
+                    _logger.LogWarning("No detail found for GetAllManagers at: {DT}", DateTime.Now.ToLongTimeString());
+                    return (IEnumerable<Managers>)NotFound();
+                }
+
+                // Set the iMemory cache options
+                var cachedData = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(60))
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(60))
+                    .SetPriority(CacheItemPriority.Normal)
+                    .SetSize(10000);
+
+                // Save the data in Memory Cache
+                _memoryCache.Set(managerListCacheKey, managers, cachedData);
+            }
+
+            _logger.LogInformation("Returning results found for GetAllManagers uri at: {DT}", DateTime.Now.ToLongTimeString());
+
+            return managers!;
         }
 
         catch (Exception ex)
         {
-            _logger.LogError("Exception errror was caught for GetAllManagers uri", DateTime.UtcNow.Date + "");
+            _logger.LogError("Exception errror was caught for GetAllManagers uri at: {DT}", DateTime.Now.ToLongTimeString());
             Console.WriteLine("{0} First exception caught.", ex.Message);
             throw ex.InnerException!;
             throw new ApplicationException("Exception thrown");
