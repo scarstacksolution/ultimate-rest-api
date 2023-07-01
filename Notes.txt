@@ -101,7 +101,108 @@ https://learn.microsoft.com/en-us/aspnet/core/performance/caching/overview?view=
 https://code-maze.com/aspnetcore-in-memory-caching/
 
 
+   // Program.cs:
 
-// Program.cs:
+   builder.Services.AddMemoryCache();
 
-builder.Services.AddMemoryCache();
+
+   // Example.cs:
+
+   private const string managerListCacheKey = "managerList";
+
+   try
+        {
+            _logger.LogInformation("Processing request for GetAllManagers at: {DT}", DateTime.Now.ToLongTimeString());
+
+            var managers = new List<Managers>();
+            if (TryGetCachedData(managerListCacheKey, managers))
+            {
+                _logger.LogInformation("GetAllManagers found in cache at: {DT}", DateTime.Now.ToLongTimeString());
+            }
+
+            if (_memoryCache.TryGetValue(managerListCacheKey, out IEnumerable<Managers> managers))
+            {
+                _logger.LogInformation("GetAllManagers found in cache at: {DT}", DateTime.Now.ToLongTimeString());
+            }
+
+            else
+            {
+
+                _logger.LogInformation("GetAllManagers not found in cache at: {DT}", DateTime.Now.ToLongTimeString());
+
+                // Key not in cache, so get data
+                managers = _readRepository.GetAllManagers();
+                if (managers!.Count() == 0)
+                {
+                    _logger.LogWarning("No detail found for GetAllManagers Uri at: {DT}", DateTime.Now.ToLongTimeString());
+                    throw new HttpResponseException(HttpStatusCode.NotFound);
+                }
+
+                // Save the data to iMemory cache
+                var cachedData = new MemoryCacheEntryOptions()
+                    .SetSlidingExpiration(TimeSpan.FromMinutes(60))
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(60))
+                    .SetPriority(CacheItemPriority.Normal)
+                    .SetSize(10000);
+
+                // Save the data in Memory Cache
+                _memoryCache.Set(managerListCacheKey, managers, cachedData);
+            }
+
+            _logger.LogInformation("Returning results found for GetAllManagers Uri at: {DT}", DateTime.Now.ToLongTimeString());
+
+            return managers!;
+        }
+
+
+===========================================================================================================================================================================
+
+
+* NUnit - Unit Testing:
+
+https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/testing?view=aspnetcore-7.0
+https://www.youtube.com/watch?v=Hmp2ctGacIo
+https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices
+
+// Nuget Packages for the Test Solution
+
+- NUnit
+- NUnit3TestAdapter
+- Microsoft.NET.Test.Sdk
+- Microsoft.AspNetCore.MVC.Testing
+- Moq
+- Moq.EntityFrameworkCore
+- Moq.Contrib.HttpClient
+
+
+// Program.cs file
+
+- Add following code at end of Program.cs file:-  public partial class Program { }
+
+
+// Samples:
+Assert.That(_departments.Any(d => d.Dept_id == 1));
+Assert.That(_departments.Any(d => d.Dept_name == "Paralegal"));
+
+
+===========================================================================================================================================================================
+
+
+   + //Multiple Row List Collection
+
+   var departments = new List<Departments>
+        {
+        { new Departments() { Dept_id = 1, Dept_name = "Paralegal"}},
+        { new Departments() { Dept_id = 2, Dept_name = "Business"}},
+        { new Departments() { Dept_id = 3, Dept_name = "Public Relations"}},
+        { new Departments() { Dept_id = 4, Dept_name = "Customer Support"}}
+        };
+
+
+   + //Single Row List Collection
+
+   var _deptData = new Departments() { Dept_id = 1, Dept_name = "Paralegal" };
+
+
+
+===========================================================================================================================================================================

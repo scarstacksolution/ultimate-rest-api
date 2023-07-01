@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using _2023_MacNETCore_API.Interfaces;
@@ -23,14 +24,14 @@ public class DiscoverYourLocalController : ControllerBase
     private readonly IReadPattern_Repository _readRepository;
     private readonly IWritePattern_Repository _writeRepository;
     private readonly IJwtAuthenticator _jwtAuthenticator;
-    private IMemoryCache _memoryCache;
-    private const string managerListCacheKey = "managerList";
+    private readonly IMemoryCaching _memoryCache;
+  
 
 
 
     // Constructor
     public DiscoverYourLocalController(ILogger<DiscoverYourLocalController> logger, IReadPattern_Repository readRepository,
-        IWritePattern_Repository writeRepository, IJwtAuthenticator jwtAuthenticator, IMemoryCache memoryCache)
+        IWritePattern_Repository writeRepository, IJwtAuthenticator jwtAuthenticator, IMemoryCaching memoryCache)
     {
         _logger = logger;
         _readRepository = readRepository;
@@ -92,7 +93,7 @@ public class DiscoverYourLocalController : ControllerBase
     [Route("GetAllManagers")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Managers>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IEnumerable<Managers> GetAllManagers()
     {
@@ -105,45 +106,37 @@ public class DiscoverYourLocalController : ControllerBase
         {
             _logger.LogInformation("Processing request for GetAllManagers at: {DT}", DateTime.Now.ToLongTimeString());
 
-
-            if(_memoryCache.TryGetValue(managerListCacheKey, out IEnumerable<Managers> managers))
+            var managers = _memoryCache.TryGetAllManagersCachedData();
+            if (managers != null)
             {
                 _logger.LogInformation("GetAllManagers found in cache at: {DT}", DateTime.Now.ToLongTimeString());
             }
 
             else
             {
-
                 _logger.LogInformation("GetAllManagers not found in cache at: {DT}", DateTime.Now.ToLongTimeString());
 
                 // Key not in cache, so get data
                 managers = _readRepository.GetAllManagers();
                 if (managers!.Count() == 0)
                 {
-                    _logger.LogWarning("No detail found for GetAllManagers at: {DT}", DateTime.Now.ToLongTimeString());
-                    return (IEnumerable<Managers>)NotFound();
+                    _logger.LogWarning("No detail found for GetAllManagers Uri at: {DT}", DateTime.Now.ToLongTimeString());
+                    throw new HttpResponseException(HttpStatusCode.NotFound);
                 }
 
-                // Set the iMemory cache options
-                var cachedData = new MemoryCacheEntryOptions()
-                    .SetSlidingExpiration(TimeSpan.FromMinutes(60))
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(60))
-                    .SetPriority(CacheItemPriority.Normal)
-                    .SetSize(10000);
-
-                // Save the data in Memory Cache
-                _memoryCache.Set(managerListCacheKey, managers, cachedData);
+                // Save the data to iMemory cache
+                _memoryCache.CacheCurrentData(managers);
             }
 
-            _logger.LogInformation("Returning results found for GetAllManagers uri at: {DT}", DateTime.Now.ToLongTimeString());
+            _logger.LogInformation("Returning results found for GetAllManagers Uri at: {DT}", DateTime.Now.ToLongTimeString());
 
             return managers!;
         }
 
         catch (Exception ex)
         {
-            _logger.LogError("Exception errror was caught for GetAllManagers uri at: {DT}", DateTime.Now.ToLongTimeString());
-            Console.WriteLine("{0} First exception caught.", ex.Message);
+            _logger.LogError("At: {DT}, Exception errror for GetAllManagers Uri, was caught: {ex.InnerException}",
+                DateTime.Now.ToLongTimeString(), ex.InnerException);
             throw ex.InnerException!;
             throw new ApplicationException("Exception thrown");
 
@@ -159,7 +152,7 @@ public class DiscoverYourLocalController : ControllerBase
     /// <returns></returns>
     [Route("GetManagerbyId/{id}")]
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Managers))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public Managers GetManagerbyId(int id)
     {
@@ -170,26 +163,26 @@ public class DiscoverYourLocalController : ControllerBase
 
         try
         {
-            _logger.LogInformation("Processing request for: Get Manager by id: {0}, at: {DT}", id, DateTime.UtcNow.Date);
+            _logger.LogInformation("Processing request for GetManagerbyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
 
             var manager = _readRepository.GetManagerbyId(id);
 
             if (manager == null)
             {
-                _logger.LogWarning("No information found for: Get Manager by id: {0}, at: {DT}", id, DateTime.UtcNow.Date);
-                var message = string.Format("No information found for: Get Manager by id: {0}, at: {DT}", id, DateTime.UtcNow.Date);
+                _logger.LogWarning("No information found for GetManagerbyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
+                var message = string.Format("No information found for GetManagerbyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
                 throw new HttpResponseException(HttpStatusCode.NotFound);
             }
 
-            _logger.LogInformation("Returning results found for: Get Manager by id: {0}, at: {DT}", DateTime.UtcNow.Date);
+            _logger.LogInformation("Returning results found for GetManagerbyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
 
             return manager;
         }
 
         catch (Exception ex)
         {
-            _logger.LogError("At {DT}, Exception errror for: Get Manager by id: {0}, was caught: {ex.InnerException}",
-                DateTime.UtcNow.Date, id, ex.InnerException);
+            _logger.LogError("At: {DT}, Exception errror for GetManagerbyId Uri, was caught: {ex.InnerException}",
+                DateTime.Now.ToLongTimeString(), ex.InnerException);
             throw ex.InnerException!;
             throw new ApplicationException("Exception thrown");
         }
@@ -205,7 +198,7 @@ public class DiscoverYourLocalController : ControllerBase
     /// <returns></returns>
     [Route("GetAllJobs")]
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Jobs>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IEnumerable<Jobs> GetAllJobs()
     {
@@ -216,25 +209,25 @@ public class DiscoverYourLocalController : ControllerBase
 
         try
         {
-            _logger.LogInformation("Processing request for {Jobs}", DateTime.Now.ToLongTimeString());
+            _logger.LogInformation("Processing request for GetAllJobs Uri at: {DT}", DateTime.Now.ToLongTimeString());
 
             var jobs = _readRepository.GetAllJobs();
 
             if (jobs.Count() == 0)
             {
-                _logger.LogWarning("No information found for {Jobs}", DateTime.Now.ToLongTimeString());
-                return (IEnumerable<Jobs>)NotFound();
+                _logger.LogWarning("No information found for GetAllJobs Uri at: {DT}", DateTime.Now.ToLongTimeString());
+                throw new HttpResponseException(HttpStatusCode.NotFound);
             }
 
-            _logger.LogInformation("Returning results found for {Jobs}", DateTime.Now.ToLongTimeString());
+            _logger.LogInformation("Returning results found for GetAllJobs Uri at: {DT}", DateTime.Now.ToLongTimeString());
 
             return jobs;
         }
 
         catch (Exception ex)
         {
-            _logger.LogError("Exception errror was caught: {ex.InnerException}", DateTime.Now.ToLongTimeString());
-            Console.WriteLine("{0} First exception caught.", ex.Message);
+            _logger.LogError("At: {DT}, Exception errror for GetAllJobs Uri, was caught: {ex.InnerException}",
+                DateTime.Now.ToLongTimeString(), ex.InnerException);
             throw ex.InnerException!;
             throw new ApplicationException("Exception thrown");
         }
@@ -249,7 +242,7 @@ public class DiscoverYourLocalController : ControllerBase
     /// <returns></returns>
     [Route("GetAllDepartments")]
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Departments>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IEnumerable<Departments> GetAllDepartments()
     {
@@ -267,7 +260,6 @@ public class DiscoverYourLocalController : ControllerBase
             if (departments.Count() == 0)
             {
                 _logger.LogWarning("At: {DT}, no information found for: - GET ALL DEPARTMENTS - endpoint", DateTime.Now.ToLongTimeString());
-                return (IEnumerable<Departments>)NotFound();
             }
 
             _logger.LogInformation("Successfully returned results at: {DT}, found for: - GET ALL DEPARTMENTS - endpoint", DateTime.Now.ToLongTimeString());
@@ -293,7 +285,7 @@ public class DiscoverYourLocalController : ControllerBase
     /// <exception cref="ApplicationException"></exception>
     [Route("PostEmployeeDetail", Name = "NewEmployeeDetail")]
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Object))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public Object PostNewEmployeeDetail([FromBody] NewEmployees employee)
     {
