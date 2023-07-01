@@ -1,0 +1,11 @@
+﻿{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;User=SA;Password=Despy1984$;ConnectRetryCount=0;MultipleActiveResultSets=true; TrustServerCertificate=true"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
+}

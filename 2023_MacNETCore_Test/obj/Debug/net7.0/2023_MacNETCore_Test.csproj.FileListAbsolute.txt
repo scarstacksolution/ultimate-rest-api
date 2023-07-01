@@ -1,0 +1,6 @@
+/Users/seandeo/Projects/2023_MacNETCore_API/2023_MacNETCore_Test/bin/Debug/net7.0/CoverletSourceRootsMapping
+/Users/seandeo/Projects/2023_MacNETCore_API/2023_MacNETCore_Test/obj/Debug/net7.0/2023_MacNETCore_Test.csproj.AssemblyReference.cache
+/Users/seandeo/Projects/2023_MacNETCore_API/2023_MacNETCore_Test/obj/Debug/net7.0/2023_MacNETCore_Test.GeneratedMSBuildEditorConfig.editorconfig
+/Users/seandeo/Projects/2023_MacNETCore_API/2023_MacNETCore_Test/obj/Debug/net7.0/2023_MacNETCore_Test.AssemblyInfoInputs.cache
+/Users/seandeo/Projects/2023_MacNETCore_API/2023_MacNETCore_Test/obj/Debug/net7.0/2023_MacNETCore_Test.AssemblyInfo.cs
+/Users/seandeo/Projects/2023_MacNETCore_API/2023_MacNETCore_Test/obj/Debug/net7.0/2023_MacNETCore_Test.csproj.CoreCompileInputs.cache

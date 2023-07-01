@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using _2023_MacNETCore_API.Authentication;
 using Microsoft.AspNetCore.Authentication;
+using _2023_MacNETCore_API.Caching;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -24,6 +25,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped<IReadPattern_Repository, ReadPattern_Repository>();
 builder.Services.AddScoped<IWritePattern_Repository, WritePattern_Repository>();
 builder.Services.AddSingleton<IJwtAuthenticator, JwtAuthenticator>();
+builder.Services.AddScoped<IMemoryCaching, MemoryCaching>();
 
 
 // Add EF & Sql Server to the container.
@@ -69,4 +71,6 @@ app.UseAuthentication();
 app.Logger.LogInformation("Starting the API App at {DT}", DateTime.Now.ToLongTimeString());
 
 app.Run();
+
+public partial class Program { }
 

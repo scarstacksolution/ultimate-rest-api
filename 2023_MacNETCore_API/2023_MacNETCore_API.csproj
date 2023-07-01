@@ -40,11 +40,13 @@
     <None Remove="System.IdentityModel.Tokens.Jwt" />
     <None Remove="JWT" />
     <None Remove="GitInfo" />
+    <None Remove="Caching\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />
     <Folder Include="Repositories\" />
     <Folder Include="Interfaces\" />
     <Folder Include="Authentication\" />
+    <Folder Include="Caching\" />
   </ItemGroup>
 </Project>
