@@ -85,6 +85,97 @@ public class DiscoverYourLocalController : ControllerBase
 
 
     /// <summary>
+    /// Gets Employee by Id
+    /// PostMan: https://localhost:7038/api/DiscoverYourLocal/GetEmployeebyId/10
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    /// <exception cref="ApplicationException"></exception>
+    [Route("GetEmployeebyId/{id}")]
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Employees))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public Employees GetEmployeebyId(int id)
+    {
+        if (!ModelState.IsValid)
+        {
+            return (Employees)(IEnumerable<Employees>)BadRequest(ModelState);
+        }
+
+        try
+        {
+            _logger.LogInformation("Processing request for GetManagerbyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
+
+            var employee = _readRepository.GetEmployeeById(id);
+
+            if (employee == null)
+            {
+                _logger.LogWarning("No information found for GetEmployeebyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
+                var message = string.Format("No information found for GetEmployeebyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
+                throw new HttpResponseException(HttpStatusCode.NotFound, message);
+            }
+
+            _logger.LogInformation("Returning results found for GetEmployeebyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
+
+            return employee;
+        }
+
+        catch (Exception ex)
+        {
+            _logger.LogError("At: {DT}, Exception errror for GetEmployeebyId Uri, was caught: {ex.InnerException}",
+                DateTime.Now.ToLongTimeString(), ex.InnerException);
+
+            throw ex.InnerException!;
+            throw new ApplicationException("Exception thrown");
+        }
+    }
+
+
+    /// <summary>
+    /// Gets All Employees
+    /// PostMan: https://localhost:7038/api/DiscoverYourLocal/GetAllEployees
+    /// To return: return Ok(Employees), use IActionResult in method signature
+    /// </summary>
+    /// <returns></returns>
+    [Route("GetAllEmployees")]
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Employees>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IEnumerable<Employees> GetAllEmployees()
+    {
+        if (!ModelState.IsValid)
+        {
+            return (IEnumerable<Employees>)BadRequest(ModelState);
+        }
+
+        try
+        {
+            _logger.LogInformation("Processing request for GetAllEmployees Uri at: {DT}", DateTime.Now.ToLongTimeString());
+
+            var employees = _readRepository.GetAllEmployees();
+
+            if (employees.Count() == 0)
+            {
+                _logger.LogWarning("No information found for GetAllEmployees Uri at: {DT}", DateTime.Now.ToLongTimeString());
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+            }
+
+            _logger.LogInformation("Returning results found for GetAllEmployees Uri at: {DT}", DateTime.Now.ToLongTimeString());
+
+            return employees;
+        }
+
+        catch (Exception ex)
+        {
+            _logger.LogError("At: {DT}, Exception errror for GetAllEmployees Uri, was caught: {ex.InnerException}",
+                DateTime.Now.ToLongTimeString(), ex.InnerException);
+            throw ex.InnerException!;
+            throw new ApplicationException("Exception thrown");
+        }
+    }
+
+
+    /// <summary>
     /// Gets All Managers
     /// PostMan: https://localhost:7038/api/DiscoverYourLocal/GetAllManagers
     /// To return: return Ok(manager), use IActionResult in method signature
@@ -183,8 +274,9 @@ public class DiscoverYourLocalController : ControllerBase
         {
             _logger.LogError("At: {DT}, Exception errror for GetManagerbyId Uri, was caught: {ex.InnerException}",
                 DateTime.Now.ToLongTimeString(), ex.InnerException);
-            throw ex.InnerException!;
-            throw new ApplicationException("Exception thrown");
+            //throw ex.InnerException!;
+            //throw new ApplicationException("Exception thrown");
+            return (Managers)(IEnumerable<Managers>)BadRequest(ModelState);
         }
     }
 
