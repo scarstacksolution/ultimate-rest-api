@@ -33,6 +33,15 @@ namespace _2023_MacNETCore_API.Repositories
         }
 
 
+        /// <summary>
+        /// Posts New User to the LoginModel Database Table
+        /// </summary>
+        /// <param name="user"></param>
+        public void PostNewUserLoginDetail(LoginModel user)
+        {
+            _context.LoginModel.Add(user);
+            _context.SaveChanges();
+        }
 
 
     }

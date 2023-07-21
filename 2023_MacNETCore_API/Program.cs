@@ -28,9 +28,14 @@ builder.Services.AddSingleton<IJwtAuthenticator, JwtAuthenticator>();
 builder.Services.AddScoped<IMemoryCaching, MemoryCaching>();
 
 
-// Add EF & Sql Server to the container.
-builder.Services.AddControllersWithViews();
-builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseSqlServer(
+// Add Newftonsoftjson to the container.
+builder.Services.AddControllersWithViews()
+ .AddNewtonsoftJson(options =>
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+);
+
+// Add EF & Lazy Load to the container.
+builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseLazyLoadingProxies().UseSqlServer(
     builder.Configuration.GetConnectionString("DefaultConnection"), providerOptions => providerOptions.EnableRetryOnFailure()));
 
 

@@ -19,6 +19,52 @@ namespace _2023_MacNETCore_API.Repositories
 
         // Methods
 
+
+        /// <summary>
+        /// Checks if an employee exists in NewEmployee Table
+        /// </summary>
+        /// <returns></returns>
+        public Employees GetEmployeeById(int id)
+        {
+            Employees employee = _context.Employees.First(e => e.id_num == id);
+            return employee;
+        }
+
+
+        /// <summary>
+        /// Checks if a Client exists in LoginModel Table
+        /// </summary>
+        /// <param name="Username"></param>
+        /// <param name="Password"></param>
+        /// <returns></returns>
+        public LoginModel GetLoginUserDetail(string Username, string Password)
+        {
+            LoginModel user = _context.LoginModel.First(l => l.Username == Username && l.Userpassword == Password);
+            return user;
+        }
+
+
+        /// <summary>
+        /// Gets All Employees from Employees Table
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<Employees> GetAllEmployees()
+        {
+            var _employees = new List<Employees>();
+
+            IEnumerable<Employees> employees = (IQueryable<Employees>)_context.Employees
+                .OrderBy(e => e.id_num);
+                 //.AsNoTracking();   //Disabled for Lazy loading...
+
+            foreach (var employee in employees)
+            {
+                _employees.Add(employee);
+            }
+
+            return _employees;
+        }
+
+
         /// <summary>
         /// Gets All Managers from Managers Table
         /// </summary>
@@ -84,8 +130,8 @@ namespace _2023_MacNETCore_API.Repositories
             var _jobs = new List<Jobs>();
 
             IEnumerable<Jobs> jobs = (IQueryable<Jobs>)_context.Jobs
-                .OrderBy(m => m.Job_id)
-                 .AsNoTracking();
+                .OrderBy(m => m.Job_id);
+                 //.AsNoTracking(); //Disabled for Lazy loading...
 
             foreach (var job in jobs)
             {
@@ -133,6 +179,22 @@ namespace _2023_MacNETCore_API.Repositories
             NewEmployees _employee = _context.NewEmployees.First(e => e.ssn == employee.ssn);
 
             if (_employee != null)
+            {
+                return true;
+            }
+            return false;
+        }
+
+
+        /// <summary>
+        /// Checks if a login user exists in LoginModel Table
+        /// </summary>
+        /// <returns></returns>
+        public bool LoginUserExist(LoginModel user)
+        {
+            LoginModel _user = _context.LoginModel.First(l => l.Username == user.Username && l.Userpassword == user.Userpassword);
+
+            if (_user != null)
             {
                 return true;
             }

@@ -23,6 +23,11 @@
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.31.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.31.0" />
     <PackageReference Include="JWT" Version="10.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="7.0.4" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.8" />
+    <PackageReference Include="System.Web.Http.Common" Version="4.0.20126.16343" />
+    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +46,12 @@
     <None Remove="JWT" />
     <None Remove="GitInfo" />
     <None Remove="Caching\" />
+    <None Remove="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
+    <None Remove="Microsoft.EntityFrameworkCore.Proxies" />
+    <None Remove="Microsoft.VisualStudio.Web.CodeGeneration.Design" />
+    <None Remove="System.Web.Http.Common" />
+    <None Remove="Microsoft.AspNet.WebApi.Client" />
+    <None Remove="HttpClient.Extensions.LoggingHttpMessageHandler" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\" />

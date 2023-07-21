@@ -35,7 +35,6 @@ namespace _2023_MacNETCore_API.Authentication
                  signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-
         }
     }
 }

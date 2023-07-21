@@ -1,4 +1,7 @@
-﻿* HttpResponseException:
+﻿===========================================================================================================================================================================
+
+
+* HttpResponseException:
 
             if (manager == null)
             {
@@ -26,13 +29,6 @@
 
 builder.Services.AddControllers()
     .AddXmlSerializerFormatters();
-
-
-
-* Context.SaveChanges();
-
-- https://learn.microsoft.com/en-us/aspnet/core/data/ef-mvc/crud?view=aspnetcore-7.0
-- https://learn.microsoft.com/en-us/aspnet/mvc/overview/getting-started/getting-started-with-ef-using-mvc/updating-related-data-with-the-entity-framework-in-an-asp-net-mvc-application
 
 
 ===========================================================================================================================================================================
@@ -83,12 +79,6 @@ app.UseAuthorization();
 - using Microsoft.AspNetCore.Authentication.JwtBearer;
 - using Microsoft.IdentityModel.Tokens;
 - using System.Text;
-
-
-===========================================================================================================================================================================
-
-
-*	GitHub Desktop https://desktop.github.com
 
 
 ===========================================================================================================================================================================
@@ -160,6 +150,8 @@ https://code-maze.com/aspnetcore-in-memory-caching/
 
 * NUnit - Unit Testing:
 
+// References for read-up
+
 https://learn.microsoft.com/en-us/aspnet/core/mvc/controllers/testing?view=aspnetcore-7.0
 https://www.youtube.com/watch?v=Hmp2ctGacIo
 https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices
@@ -206,3 +198,89 @@ Assert.That(_departments.Any(d => d.Dept_name == "Paralegal"));
 
 
 ===========================================================================================================================================================================
+
+
+// Git Version Control & CI/CD Pipeline
+
+Enusre you are in your working dev branch
+make changes to your working dev branch
+Stage your changes
+Commit your changes
+Merge committed changes to main branch
+Publish your Main
+
+
+// Other Terminologies:
+
+Push and Pull
+Pull Requests
+New Branches
+Cloning Repositories
+Code Review
+Branch History
+Compare with Unmodified
+Merge Branches
+Checkout
+Fetch
+Compare with unmodified
+
+
+===========================================================================================================================================================================
+
+
+LAZY LOADING:
+
+
+// MSDN Reference:  https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.dependencyinjection.proxiesservicecollectionextensions.addentityframeworkproxies?view=efcore-7.0#microsoft-extensions-dependencyinjection-proxiesservicecollectionextensions-addentityframeworkproxies(microsoft-extensions-dependencyinjection-iservicecollection)
+                    https://learn.microsoft.com/en-us/ef/core/querying/related-data/lazy
+
+
+// Nuget Packages:
+
+Downlaod the following package:- Microsoft.EntityFrameworkCore.Proxies (V.7.0.4)
+                                 Microsoft.AspNetCore.Mvc.NewtonsoftJson
+
+
+// Program.cs file
+
+* Add Lazy Loading and NewtonsoftJson to Entity Framework core & SQL Server Configuration like below in Program.cs:-
+
+// Add Newftonsoftjson to the container.
+builder.Services.AddControllersWithViews()
+ .AddNewtonsoftJson(options =>
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+);
+
+
+// Add EF & Lazy Load to the container.
+builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseLazyLoadingProxies().UseSqlServer(
+    builder.Configuration.GetConnectionString("DefaultConnection"), providerOptions => providerOptions.EnableRetryOnFailure()));
+
+
+// Sample: Employee.cs
+
+        [ForeignKey("Job_id")]
+        public virtual Jobs? Job { get; set; }
+
+        [ForeignKey("Address_id")]
+        public virtual Address? Address { get; set; }
+
+        [ForeignKey("Manager_id")]
+        public virtual Managers? Manager { get; set; }
+
+        [ForeignKey("Dept_id")]
+        public virtual Departments? Department { get; set; } 
+
+        [ForeignKey("Loc_id")]
+        public virtual Worklocation? Worklocation { get; set; }
+
+
+// Repository.cs : - Uncomment AsNoTraccking Logic!
+
+   NOTE: Lazy loading is not supported for detached entities or entities that are loaded with 'AsNoTracking'.
+   MEANING: Example, don't use .AsNoTracking in Repository call to the DBSet holding Lazy Load (Employee.cs)
+
+
+===========================================================================================================================================================================
+
+
