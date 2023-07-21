@@ -212,6 +212,7 @@ Publish your Main
 
 // Other Terminologies:
 
+Push and Pull
 Pull Requests
 New Branches
 Cloning Repositories
@@ -219,6 +220,9 @@ Code Review
 Branch History
 Compare with Unmodified
 Merge Branches
+Checkout
+Fetch
+Compare with unmodified
 
 
 ===========================================================================================================================================================================

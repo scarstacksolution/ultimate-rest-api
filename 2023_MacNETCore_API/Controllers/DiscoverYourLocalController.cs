@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using _2023_MacNETCore_API.Interfaces;
-using _2023_MacNETCore_API.Models;
+using System.Net.Http;
+using System.Web.Http;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +12,9 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Sane.Http.HttpResponseExceptions;
+using _2023_MacNETCore_API.Interfaces;
+using _2023_MacNETCore_API.Models;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace _2023_MacNETCore_API.Controllers;
 
@@ -25,8 +28,6 @@ public class DiscoverYourLocalController : ControllerBase
     private readonly IWritePattern_Repository _writeRepository;
     private readonly IJwtAuthenticator _jwtAuthenticator;
     private readonly IMemoryCaching _memoryCache;
-  
-
 
 
     // Constructor
@@ -79,14 +80,13 @@ public class DiscoverYourLocalController : ControllerBase
             var token = _jwtAuthenticator.GenerateToken(_user);
             return Ok(token);
         }
-
         return NotFound("user not found");
     }
 
 
     /// <summary>
     /// Gets Employee by Id
-    /// PostMan: https://localhost:7038/api/DiscoverYourLocal/GetEmployeebyId/10
+    /// PostMan: https://localhost:7038/api/DiscoverYourLocal/GetEmployeebyId/5
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
@@ -95,38 +95,32 @@ public class DiscoverYourLocalController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Employees))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public Employees GetEmployeebyId(int id)
+    public IActionResult GetEmployeebyId(int id)
     {
         if (!ModelState.IsValid)
         {
-            return (Employees)(IEnumerable<Employees>)BadRequest(ModelState);
+            return BadRequest(ModelState);
         }
-
         try
         {
             _logger.LogInformation("Processing request for GetManagerbyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
-
             var employee = _readRepository.GetEmployeeById(id);
 
             if (employee == null)
             {
                 _logger.LogWarning("No information found for GetEmployeebyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
                 var message = string.Format("No information found for GetEmployeebyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
-                throw new HttpResponseException(HttpStatusCode.NotFound, message);
+                return NotFound("GetEmployeebyId not found");
             }
 
             _logger.LogInformation("Returning results found for GetEmployeebyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
-
-            return employee;
+            return Ok(employee);
         }
-
         catch (Exception ex)
         {
             _logger.LogError("At: {DT}, Exception errror for GetEmployeebyId Uri, was caught: {ex.InnerException}",
                 DateTime.Now.ToLongTimeString(), ex.InnerException);
-
             throw ex.InnerException!;
-            throw new ApplicationException("Exception thrown");
         }
     }
 
@@ -134,43 +128,37 @@ public class DiscoverYourLocalController : ControllerBase
     /// <summary>
     /// Gets All Employees
     /// PostMan: https://localhost:7038/api/DiscoverYourLocal/GetAllEployees
-    /// To return: return Ok(Employees), use IActionResult in method signature
     /// </summary>
     /// <returns></returns>
     [Route("GetAllEmployees")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Employees>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public IEnumerable<Employees> GetAllEmployees()
+    public IActionResult GetAllEmployees()
     {
         if (!ModelState.IsValid)
         {
-            return (IEnumerable<Employees>)BadRequest(ModelState);
+            return BadRequest(ModelState);
         }
-
         try
         {
             _logger.LogInformation("Processing request for GetAllEmployees Uri at: {DT}", DateTime.Now.ToLongTimeString());
-
             var employees = _readRepository.GetAllEmployees();
 
             if (employees.Count() == 0)
             {
                 _logger.LogWarning("No information found for GetAllEmployees Uri at: {DT}", DateTime.Now.ToLongTimeString());
-                throw new HttpResponseException(HttpStatusCode.NotFound);
+                return NotFound("GetAllEmployees not found");
             }
 
             _logger.LogInformation("Returning results found for GetAllEmployees Uri at: {DT}", DateTime.Now.ToLongTimeString());
-
-            return employees;
+            return Ok(employees);
         }
-
         catch (Exception ex)
         {
             _logger.LogError("At: {DT}, Exception errror for GetAllEmployees Uri, was caught: {ex.InnerException}",
                 DateTime.Now.ToLongTimeString(), ex.InnerException);
             throw ex.InnerException!;
-            throw new ApplicationException("Exception thrown");
         }
     }
 
@@ -178,7 +166,6 @@ public class DiscoverYourLocalController : ControllerBase
     /// <summary>
     /// Gets All Managers
     /// PostMan: https://localhost:7038/api/DiscoverYourLocal/GetAllManagers
-    /// To return: return Ok(manager), use IActionResult in method signature
     /// </summary>
     /// <returns></returns>
     [Route("GetAllManagers")]
@@ -186,23 +173,21 @@ public class DiscoverYourLocalController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Managers>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public IEnumerable<Managers> GetAllManagers()
+    public IActionResult GetAllManagers()
     {
         if (!ModelState.IsValid)
         {
-            return (IEnumerable<Managers>)BadRequest(ModelState);
+            return BadRequest(ModelState);
         }
-
         try
         {
             _logger.LogInformation("Processing request for GetAllManagers at: {DT}", DateTime.Now.ToLongTimeString());
-
             var managers = _memoryCache.TryGetAllManagersCachedData();
+
             if (managers != null)
             {
                 _logger.LogInformation("GetAllManagers found in cache at: {DT}", DateTime.Now.ToLongTimeString());
             }
-
             else
             {
                 _logger.LogInformation("GetAllManagers not found in cache at: {DT}", DateTime.Now.ToLongTimeString());
@@ -212,25 +197,20 @@ public class DiscoverYourLocalController : ControllerBase
                 if (managers!.Count() == 0)
                 {
                     _logger.LogWarning("No detail found for GetAllManagers Uri at: {DT}", DateTime.Now.ToLongTimeString());
-                    throw new HttpResponseException(HttpStatusCode.NotFound);
+                    return NotFound("GetAllManagers not found");
                 }
-
                 // Save the data to iMemory cache
                 _memoryCache.CacheCurrentData(managers);
             }
 
             _logger.LogInformation("Returning results found for GetAllManagers Uri at: {DT}", DateTime.Now.ToLongTimeString());
-
-            return managers!;
+            return Ok(managers);
         }
-
         catch (Exception ex)
         {
             _logger.LogError("At: {DT}, Exception errror for GetAllManagers Uri, was caught: {ex.InnerException}",
                 DateTime.Now.ToLongTimeString(), ex.InnerException);
             throw ex.InnerException!;
-            throw new ApplicationException("Exception thrown");
-
         }
     }
 
@@ -238,90 +218,117 @@ public class DiscoverYourLocalController : ControllerBase
     /// <summary>
     /// Gets Managers by Id
     /// PostMan: https://localhost:7038/api/DiscoverYourLocal/GetManagerbyId/4
-    /// To return: "return Ok(manager)", use IActionResult in method signature
     /// </summary>
     /// <returns></returns>
     [Route("GetManagerbyId/{id}")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Managers))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public Managers GetManagerbyId(int id)
+    public IActionResult GetManagerbyId(int id)
     {
         if (!ModelState.IsValid)
         {
-            return (Managers)(IEnumerable<Managers>)BadRequest(ModelState);
+            return BadRequest(ModelState);
         }
-
         try
         {
             _logger.LogInformation("Processing request for GetManagerbyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
-
             var manager = _readRepository.GetManagerbyId(id);
 
             if (manager == null)
             {
                 _logger.LogWarning("No information found for GetManagerbyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
                 var message = string.Format("No information found for GetManagerbyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
-                throw new HttpResponseException(HttpStatusCode.NotFound);
+                return NotFound("GetManagerbyId not found");
             }
 
             _logger.LogInformation("Returning results found for GetManagerbyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
-
-            return manager;
+            return Ok(manager);
         }
-
         catch (Exception ex)
         {
             _logger.LogError("At: {DT}, Exception errror for GetManagerbyId Uri, was caught: {ex.InnerException}",
                 DateTime.Now.ToLongTimeString(), ex.InnerException);
-            //throw ex.InnerException!;
-            //throw new ApplicationException("Exception thrown");
-            return (Managers)(IEnumerable<Managers>)BadRequest(ModelState);
+            throw ex.InnerException!;
         }
     }
 
+
+    /// <summary>
+    /// Validates the login user
+    /// PostMan: https://localhost:7038/api/DiscoverYourLocal/ValidateLoginUser/sampleName/samplePassword
+    /// </summary>
+    /// <param name="username"></param>
+    /// <param name="password"></param>
+    /// <returns></returns>
+    [Route("ValidateLoginUser/{username}/{password}")]
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LoginModel))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IActionResult ValidateLoginUser(string username, string password)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        try
+        {
+            _logger.LogInformation("Processing request for GetManagerbyId Uri at: {DT}", DateTime.Now.ToLongTimeString());
+            var user = _readRepository.GetLoginUserDetail(username, password);
+
+            if (user == null)
+            {
+                _logger.LogWarning("No information found for GetLoginUserDetail Uri at: {DT}", DateTime.Now.ToLongTimeString());
+                var message = string.Format("No information found for GetLoginUserDetail Uri at: {DT}", DateTime.Now.ToLongTimeString());
+                return NotFound("GetLoginUserDetail not found");
+            }
+
+            _logger.LogInformation("Returning results found for GetLoginUserDetail Uri at: {DT}", DateTime.Now.ToLongTimeString());
+            return Ok(user);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("At: {DT}, Exception errror for GetLoginUserDetail Uri, was caught: {ex.InnerException}",
+                DateTime.Now.ToLongTimeString(), ex.InnerException);
+            throw ex.InnerException!;
+        }
+    }
 
 
     /// <summary>
     /// Gets All Managers
     /// PostMan: https://localhost:7038/api/DiscoverYourLocal/GetAllJobs
-    /// To return: return Ok(jobs), use IActionResult in method signature
     /// </summary>
     /// <returns></returns>
     [Route("GetAllJobs")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Jobs>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public IEnumerable<Jobs> GetAllJobs()
+    public IActionResult GetAllJobs()
     {
         if (!ModelState.IsValid)
         {
-            return (IEnumerable<Jobs>)BadRequest(ModelState);
+            return BadRequest(ModelState); //IEnumerable<Jobs>
         }
-
         try
         {
             _logger.LogInformation("Processing request for GetAllJobs Uri at: {DT}", DateTime.Now.ToLongTimeString());
-
             var jobs = _readRepository.GetAllJobs();
 
             if (jobs.Count() == 0)
             {
                 _logger.LogWarning("No information found for GetAllJobs Uri at: {DT}", DateTime.Now.ToLongTimeString());
-                throw new HttpResponseException(HttpStatusCode.NotFound);
+                return NotFound();
             }
 
             _logger.LogInformation("Returning results found for GetAllJobs Uri at: {DT}", DateTime.Now.ToLongTimeString());
-
-            return jobs;
+            return Ok(jobs);
         }
-
         catch (Exception ex)
         {
             _logger.LogError("At: {DT}, Exception errror for GetAllJobs Uri, was caught: {ex.InnerException}",
                 DateTime.Now.ToLongTimeString(), ex.InnerException);
             throw ex.InnerException!;
-            throw new ApplicationException("Exception thrown");
         }
     }
 
@@ -329,42 +336,37 @@ public class DiscoverYourLocalController : ControllerBase
     /// <summary>
     /// Gets All Departments
     /// PostMan: https://localhost:7038/api/DiscoverYourLocal/GetAllDepartments
-    /// To return: return Ok(departments), use IActionResult in method signature
     /// </summary>
     /// <returns></returns>
     [Route("GetAllDepartments")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<Departments>))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public IEnumerable<Departments> GetAllDepartments()
+    public IActionResult GetAllDepartments()
     {
         if (!ModelState.IsValid)
         {
-            return (IEnumerable<Departments>)BadRequest(ModelState);
+            return BadRequest(ModelState);
         }
-
         try
         {
             _logger.LogInformation("Processing request for - GET ALL DEPARTMENTS - endpoint, at: {DT}", DateTime.Now.ToLongTimeString());
-
             var departments = _readRepository.GetAllDepartments();
 
             if (departments.Count() == 0)
             {
                 _logger.LogWarning("At: {DT}, no information found for: - GET ALL DEPARTMENTS - endpoint", DateTime.Now.ToLongTimeString());
+                return NotFound("GET ALL DEPARTMENTS NOT FOUND");
             }
 
             _logger.LogInformation("Successfully returned results at: {DT}, found for: - GET ALL DEPARTMENTS - endpoint", DateTime.Now.ToLongTimeString());
-
-            return departments;
+            return Ok(departments);
         }
-
         catch (Exception ex)
         {
             _logger.LogError("At: {DT}, Exception errror for: - GET ALL DEPARTMENTS - endpoint, was caught: {ex.InnerException}",
                 DateTime.Now.ToLongTimeString(), ex.InnerException);
             throw ex.InnerException!;
-            throw new ApplicationException("Exception thrown");
         }
     }
 
@@ -374,25 +376,23 @@ public class DiscoverYourLocalController : ControllerBase
     /// </summary>
     /// <param name="employee"></param>
     /// <returns></returns>
-    /// <exception cref="ApplicationException"></exception>
     [Route("PostEmployeeDetail", Name = "NewEmployeeDetail")]
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Object))]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(NewEmployees))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public Object PostNewEmployeeDetail([FromBody] NewEmployees employee)
+    public IActionResult PostNewEmployeeDetail([FromBody] NewEmployees employee)
     {
         if (!ModelState.IsValid)
         {
-            return HttpStatusCode.BadRequest;
+            return BadRequest(ModelState);
         }
-
         try
         {
             _logger.LogInformation("Processing {NewEmployees}, PostEmployeeDetail request at {DT}",
                 employee, DateTime.Now.ToLongTimeString());
+
             _writeRepository.PostNewEmployeeInformation(employee);
         }
-
         catch (DbUpdateException ex)
         {
             if (_readRepository.employeeExist(employee))
@@ -406,13 +406,11 @@ public class DiscoverYourLocalController : ControllerBase
                 throw;
             }
         }
-
         catch (Exception ex)
         {
             _logger.LogError("At: { DT}, Exception errror for {NewEmployees}, was caught: {ex.InnerException}",
                 DateTime.Now.ToLongTimeString(), employee, ex.InnerException);
             throw ex.InnerException!;
-            throw new ApplicationException("Exception thrown");
         }
 
         _logger.LogInformation("New Employee Detail {NewEmployees}, Successfully saved to Database at {DT}",
@@ -421,6 +419,54 @@ public class DiscoverYourLocalController : ControllerBase
         return CreatedAtRoute("NewEmployeeDetail", new { id = employee.id, employee });
     }
 
+
+    /// <summary>
+    /// Saves New LogInModel Client to Database
+    /// </summary>
+    /// <param name="loginUser"></param>
+    /// <returns></returns>
+    [Route("PostNewUserDetail", Name = "NewUserLoginDetail")]
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(LoginModel))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IActionResult PostNewUserLoginDetail([FromBody] LoginModel loginUser)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+        try
+        {
+            _logger.LogInformation("Processing {PostNewUserDetail}, PostNewUserDetail request at {DT}",
+                loginUser, DateTime.Now.ToLongTimeString());
+
+            _writeRepository.PostNewUserLoginDetail(loginUser);
+        }
+        catch (DbUpdateException ex)
+        {
+            if (_readRepository.LoginUserExist(loginUser))
+            {
+                _logger.LogError("At: {DT}, DbUpdateException errror for {LoginModel}, was caught: {ex.InnerException}",
+                    DateTime.Now.ToLongTimeString(), loginUser, ex.InnerException);
+                return Conflict();
+            }
+            else
+            {
+                throw;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("At: { DT}, Exception errror for {LoginModel}, was caught: {ex.InnerException}",
+                DateTime.Now.ToLongTimeString(), loginUser, ex.InnerException);
+            throw ex.InnerException!;
+        }
+
+        _logger.LogInformation("New LoginModel Detail {LoginModel}, Successfully saved to Database at {DT}",
+            loginUser, DateTime.Now.ToLongTimeString());
+
+        return CreatedAtRoute("NewUserLoginDetail", new { id = loginUser.User_id, loginUser });
+    }
 
 }
 

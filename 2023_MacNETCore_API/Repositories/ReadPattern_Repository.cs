@@ -32,6 +32,19 @@ namespace _2023_MacNETCore_API.Repositories
 
 
         /// <summary>
+        /// Checks if a Client exists in LoginModel Table
+        /// </summary>
+        /// <param name="Username"></param>
+        /// <param name="Password"></param>
+        /// <returns></returns>
+        public LoginModel GetLoginUserDetail(string Username, string Password)
+        {
+            LoginModel user = _context.LoginModel.First(l => l.Username == Username && l.Userpassword == Password);
+            return user;
+        }
+
+
+        /// <summary>
         /// Gets All Employees from Employees Table
         /// </summary>
         /// <returns></returns>
@@ -166,6 +179,22 @@ namespace _2023_MacNETCore_API.Repositories
             NewEmployees _employee = _context.NewEmployees.First(e => e.ssn == employee.ssn);
 
             if (_employee != null)
+            {
+                return true;
+            }
+            return false;
+        }
+
+
+        /// <summary>
+        /// Checks if a login user exists in LoginModel Table
+        /// </summary>
+        /// <returns></returns>
+        public bool LoginUserExist(LoginModel user)
+        {
+            LoginModel _user = _context.LoginModel.First(l => l.Username == user.Username && l.Userpassword == user.Userpassword);
+
+            if (_user != null)
             {
                 return true;
             }

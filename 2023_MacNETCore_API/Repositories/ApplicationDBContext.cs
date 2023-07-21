@@ -19,5 +19,6 @@ namespace _2023_MacNETCore_API.Repositories
         public DbSet<Worklocation> Worklocation { get; set; }
         public DbSet<NewEmployees> NewEmployees { get; set; }
         public DbSet<JwtClients> JwtClients { get; set; }
+        public DbSet<LoginModel> LoginModel { get; set; }
     }
 }
